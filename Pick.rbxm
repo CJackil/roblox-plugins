@@ -1,0 +1,1020 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
+	<External>null</External>
+	<External>nil</External>
+	<Item class="Folder" referent="RBXAB23F5B9356340BEB337D349C8FEF5B5">
+		<Properties>
+			<BinaryString name="AttributesSerialize"></BinaryString>
+			<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+			<bool name="DefinesCapabilities">false</bool>
+			<string name="Name">Pick</string>
+			<int64 name="SourceAssetId">-1</int64>
+			<BinaryString name="Tags">G35ob3Rzd2FwIw==</BinaryString>
+		</Properties>
+		<Item class="Script" referent="RBX2548914C698B40E88DA356D39EFF86CF">
+			<Properties>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<bool name="Disabled">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Plugin</string>
+				<token name="RunContext">0</token>
+				<string name="ScriptGuid">{A00A5594-AC30-4788-998E-14044E6A51F0}</string>
+				<ProtectedString name="Source"><![CDATA[local Package = script.Parent
+local MakeWidget = require(Package.MakeWidget)(plugin)
+local Pick = require(Package.Pick)
+
+local Selection = game:GetService("Selection")
+local Studio = settings().Studio
+
+local Icons = {
+	Pick = "rbxassetid://4695649036",
+	Pin = "rbxassetid://4695649530",
+	Unpin = "rbxassetid://4695649274"
+}
+
+local IsPluginPinned = plugin:GetSetting "IsPluginPinned" == true
+
+local pluginGui = MakeWidget(Package.ScreenGui, "PickUI",
+	DockWidgetPluginGuiInfo.new(
+		Enum.InitialDockState.Top,
+		false,
+		not IsPluginPinned,
+		400, 14 + 5 + 5,
+		125, 14 + 5 + 5
+	), "Pick"
+)
+
+local toolbar = plugin:CreateToolbar "Pick Pro"
+local button = toolbar:CreateButton(
+	"Pick",
+	"Select instances using special syntax",
+	Icons.Pick
+)
+button.ClickableWhenViewportHidden = true
+local pinButton = toolbar:CreateButton(
+	"Pin UI",
+	"When pinned, the Pick UI will not close after a rule is entered.",
+	IsPluginPinned and Icons.Unpin or Icons.Pin
+)
+pinButton.ClickableWhenViewportHidden = true
+pinButton:SetActive(IsPluginPinned)
+button:SetActive(pluginGui.Enabled)
+
+local function SetPluginPinned(v)
+	IsPluginPinned = v == true
+	plugin:SetSetting("IsPluginPinned", IsPluginPinned)
+	pinButton:SetActive(IsPluginPinned)
+	pinButton.Icon = IsPluginPinned and Icons.Unpin or Icons.Pin
+end
+
+local function CloseGui()
+	pluginGui.Content.RuleBox.Text = ""
+	pluginGui.Enabled = false
+	button:SetActive(false)
+end
+
+pinButton.Click:Connect(function()
+	SetPluginPinned(not IsPluginPinned)
+end)
+
+button.Click:Connect(function()
+	pluginGui.Enabled = not pluginGui.Enabled
+	if pluginGui.Enabled then
+		pluginGui.Content.RuleBox:CaptureFocus()
+	end
+	button:SetActive(pluginGui.Enabled)
+end)
+
+pluginGui:BindToClose(CloseGui)
+
+pluginGui.Content.RuleBox.FocusLost:Connect(function(enterPressed)
+	if not enterPressed then return end
+	local rule = pluginGui.Content.RuleBox.Text
+	Selection:Set(Pick(rule).array())
+	pluginGui.Content.RuleBox.Text = ""
+	if not IsPluginPinned then
+		CloseGui()
+	end
+end)
+
+local function UpdateTheme()
+	pluginGui.Content.BackgroundColor3 = Studio.Theme:GetColor(Enum.StudioStyleGuideColor.InputFieldBackground, Enum.StudioStyleGuideModifier.Default)
+	pluginGui.Content.RuleBox.TextColor3 = Studio.Theme:GetColor(Enum.StudioStyleGuideColor.MainText, Enum.StudioStyleGuideModifier.Default)
+	pluginGui.Content.RuleBox.PlaceholderColor3 = Studio.Theme:GetColor(Enum.StudioStyleGuideColor.DimmedText, Enum.StudioStyleGuideModifier.Default)
+end
+UpdateTheme()
+Studio.ThemeChanged:Connect(UpdateTheme)]]></ProtectedString>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+		</Item>
+		<Item class="ModuleScript" referent="RBXED3FF467517E4C5389439C6362C47AED">
+			<Properties>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">MakeWidget</string>
+				<string name="ScriptGuid">{CB1C5889-E20F-40EA-A635-6190A5BEF67D}</string>
+				<ProtectedString name="Source"><![CDATA[--[[
+	
+	MakeWidget
+	convert screen guis to dock widgets
+	
+	by Elttob
+	
+--]]
+
+--== Make from ScreenGui ==--
+local function makeFromGui(plugin, screenGui, widgetId, widgetInfo, title)
+	local pluginGui = plugin:CreateDockWidgetPluginGui(widgetId, widgetInfo)
+	pluginGui.Title = title
+	pluginGui.ZIndexBehavior = screenGui.ZIndexBehavior
+	
+	for i, v in pairs(screenGui:GetChildren()) do
+		v:Clone().Parent = pluginGui
+	end
+	
+	return pluginGui
+end
+
+
+--== Wrapper ==--
+return function(plugin)
+	return function(...)
+		return makeFromGui(plugin, ...)
+	end
+end]]></ProtectedString>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+		</Item>
+		<Item class="ScreenGui" referent="RBXF3423FF6E9FE40FB8A08DC536A17EDEF">
+			<Properties>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<bool name="AutoLocalize">true</bool>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="ClipToDeviceSafeArea">true</bool>
+				<bool name="DefinesCapabilities">false</bool>
+				<int name="DisplayOrder">0</int>
+				<bool name="Enabled">true</bool>
+				<string name="Name">ScreenGui</string>
+				<bool name="ResetOnSpawn">true</bool>
+				<Ref name="RootLocalizationTable">null</Ref>
+				<token name="SafeAreaCompatibility">1</token>
+				<token name="ScreenInsets">2</token>
+				<token name="SelectionBehaviorDown">0</token>
+				<token name="SelectionBehaviorLeft">0</token>
+				<token name="SelectionBehaviorRight">0</token>
+				<token name="SelectionBehaviorUp">0</token>
+				<bool name="SelectionGroup">false</bool>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+				<token name="ZIndexBehavior">0</token>
+			</Properties>
+			<Item class="Frame" referent="RBXC2E2A9F04C1342DA92D9301CA61A6D71">
+				<Properties>
+					<bool name="Active">false</bool>
+					<Vector2 name="AnchorPoint">
+						<X>0</X>
+						<Y>0</Y>
+					</Vector2>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<bool name="AutoLocalize">true</bool>
+					<token name="AutomaticSize">0</token>
+					<Color3 name="BackgroundColor3">
+						<R>0</R>
+						<G>0</G>
+						<B>0</B>
+					</Color3>
+					<float name="BackgroundTransparency">0</float>
+					<Color3 name="BorderColor3">
+						<R>0.105882362</R>
+						<G>0.164705887</G>
+						<B>0.207843155</B>
+					</Color3>
+					<token name="BorderMode">0</token>
+					<int name="BorderSizePixel">1</int>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="ClipsDescendants">false</bool>
+					<bool name="DefinesCapabilities">false</bool>
+					<bool name="Draggable">false</bool>
+					<bool name="Interactable">true</bool>
+					<int name="LayoutOrder">0</int>
+					<string name="Name">Content</string>
+					<Ref name="NextSelectionDown">null</Ref>
+					<Ref name="NextSelectionLeft">null</Ref>
+					<Ref name="NextSelectionRight">null</Ref>
+					<Ref name="NextSelectionUp">null</Ref>
+					<UDim2 name="Position">
+						<XS>0</XS>
+						<XO>0</XO>
+						<YS>0</YS>
+						<YO>0</YO>
+					</UDim2>
+					<Ref name="RootLocalizationTable">null</Ref>
+					<float name="Rotation">0</float>
+					<bool name="Selectable">false</bool>
+					<token name="SelectionBehaviorDown">0</token>
+					<token name="SelectionBehaviorLeft">0</token>
+					<token name="SelectionBehaviorRight">0</token>
+					<token name="SelectionBehaviorUp">0</token>
+					<bool name="SelectionGroup">false</bool>
+					<Ref name="SelectionImageObject">null</Ref>
+					<int name="SelectionOrder">0</int>
+					<UDim2 name="Size">
+						<XS>1</XS>
+						<XO>0</XO>
+						<YS>1</YS>
+						<YO>0</YO>
+					</UDim2>
+					<token name="SizeConstraint">0</token>
+					<int64 name="SourceAssetId">-1</int64>
+					<token name="Style">0</token>
+					<BinaryString name="Tags"></BinaryString>
+					<bool name="Visible">true</bool>
+					<int name="ZIndex">0</int>
+				</Properties>
+				<Item class="UIPadding" referent="RBXB02CE69403CA426FAFD8CA94117657EB">
+					<Properties>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="DefinesCapabilities">false</bool>
+						<string name="Name">UIPadding</string>
+						<UDim name="PaddingBottom">
+							<S>0</S>
+							<O>5</O>
+						</UDim>
+						<UDim name="PaddingLeft">
+							<S>0</S>
+							<O>5</O>
+						</UDim>
+						<UDim name="PaddingRight">
+							<S>0</S>
+							<O>5</O>
+						</UDim>
+						<UDim name="PaddingTop">
+							<S>0</S>
+							<O>5</O>
+						</UDim>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+					</Properties>
+				</Item>
+				<Item class="TextBox" referent="RBXE869B400115C468798D0D889EA695D48">
+					<Properties>
+						<bool name="Active">true</bool>
+						<Vector2 name="AnchorPoint">
+							<X>0</X>
+							<Y>0</Y>
+						</Vector2>
+						<BinaryString name="AttributesSerialize"></BinaryString>
+						<bool name="AutoLocalize">true</bool>
+						<token name="AutomaticSize">0</token>
+						<Color3 name="BackgroundColor3">
+							<R>1</R>
+							<G>1</G>
+							<B>1</B>
+						</Color3>
+						<float name="BackgroundTransparency">1</float>
+						<Color3 name="BorderColor3">
+							<R>0.105882362</R>
+							<G>0.164705887</G>
+							<B>0.207843155</B>
+						</Color3>
+						<token name="BorderMode">0</token>
+						<int name="BorderSizePixel">1</int>
+						<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+						<bool name="ClearTextOnFocus">false</bool>
+						<bool name="ClipsDescendants">false</bool>
+						<bool name="DefinesCapabilities">false</bool>
+						<bool name="Draggable">false</bool>
+						<Font name="FontFace">
+							<Family><url>rbxasset://fonts/families/SourceSansPro.json</url></Family>
+							<Weight>400</Weight>
+							<Style>Normal</Style>
+							<CachedFaceId><url>rbxasset://fonts/SourceSansPro-Regular.ttf</url></CachedFaceId>
+						</Font>
+						<bool name="Interactable">true</bool>
+						<int name="LayoutOrder">0</int>
+						<float name="LineHeight">1</float>
+						<string name="LocalizationMatchIdentifier"></string>
+						<string name="LocalizationMatchedSourceText"></string>
+						<int name="MaxVisibleGraphemes">-1</int>
+						<bool name="MultiLine">false</bool>
+						<string name="Name">RuleBox</string>
+						<Ref name="NextSelectionDown">null</Ref>
+						<Ref name="NextSelectionLeft">null</Ref>
+						<Ref name="NextSelectionRight">null</Ref>
+						<Ref name="NextSelectionUp">null</Ref>
+						<Color3 name="PlaceholderColor3">
+							<R>0.699999988</R>
+							<G>0.699999988</G>
+							<B>0.699999988</B>
+						</Color3>
+						<string name="PlaceholderText">Type a rule here, then press Enter to select matching instances</string>
+						<UDim2 name="Position">
+							<XS>0</XS>
+							<XO>0</XO>
+							<YS>0</YS>
+							<YO>0</YO>
+						</UDim2>
+						<bool name="RichText">false</bool>
+						<Ref name="RootLocalizationTable">null</Ref>
+						<float name="Rotation">0</float>
+						<bool name="Selectable">true</bool>
+						<token name="SelectionBehaviorDown">0</token>
+						<token name="SelectionBehaviorLeft">0</token>
+						<token name="SelectionBehaviorRight">0</token>
+						<token name="SelectionBehaviorUp">0</token>
+						<bool name="SelectionGroup">false</bool>
+						<Ref name="SelectionImageObject">null</Ref>
+						<int name="SelectionOrder">0</int>
+						<bool name="ShowNativeInput">true</bool>
+						<UDim2 name="Size">
+							<XS>1</XS>
+							<XO>0</XO>
+							<YS>1</YS>
+							<YO>0</YO>
+						</UDim2>
+						<token name="SizeConstraint">0</token>
+						<int64 name="SourceAssetId">-1</int64>
+						<BinaryString name="Tags"></BinaryString>
+						<string name="Text"></string>
+						<Color3 name="TextColor3">
+							<R>1</R>
+							<G>1</G>
+							<B>1</B>
+						</Color3>
+						<token name="TextDirection">0</token>
+						<bool name="TextEditable">true</bool>
+						<bool name="TextScaled">false</bool>
+						<float name="TextSize">14</float>
+						<Color3 name="TextStrokeColor3">
+							<R>0</R>
+							<G>0</G>
+							<B>0</B>
+						</Color3>
+						<float name="TextStrokeTransparency">1</float>
+						<float name="TextTransparency">0</float>
+						<token name="TextTruncate">1</token>
+						<bool name="TextWrapped">true</bool>
+						<token name="TextXAlignment">0</token>
+						<token name="TextYAlignment">0</token>
+						<bool name="Visible">true</bool>
+						<int name="ZIndex">1</int>
+					</Properties>
+				</Item>
+			</Item>
+		</Item>
+		<Item class="ModuleScript" referent="RBX92512D89AF864C0DBF1B523C353C3E14">
+			<Properties>
+				<BinaryString name="AttributesSerialize"></BinaryString>
+				<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+				<bool name="DefinesCapabilities">false</bool>
+				<Content name="LinkedSource"><null></null></Content>
+				<string name="Name">Pick</string>
+				<string name="ScriptGuid">{869CCB01-43F9-43DF-82D1-9810DDE2844D}</string>
+				<ProtectedString name="Source"><![CDATA[--- Pick
+-- A simple function that lets you pick instances using patterns.
+--
+-- Patterns:
+-- foobar
+-- Matches all instances with the name foobar.
+--
+-- Alice, Bob
+-- Matches all instances with the name Alice, and all instances with the name Bob.
+--
+-- "Smooth Block Model", Part
+-- Matches all instances with the name Smooth Block Model, and all instances with the name Part.
+--
+-- .BasePart
+-- Matches all BasePart instances
+--
+-- .Lighting > .Sky
+-- Matches all Sky instances which are children of Lighting.
+--
+-- .Players > Elttob.Player > .Backpack > Slingshot.Tool
+-- Matches all tools named Slingshot in the backpack of the player named Elttob.
+--
+-- *
+-- Matches all instances.
+--
+-- #BlueTag
+-- Matches all instances with the tag BlueTag (see: CollectionService)
+--
+--
+-- Alice > {Bob} > Charlie
+-- Matches all instances with the name Charlie which are children of Bob and Alice, but returns the instances of Bob instead.
+
+local players  = game:GetService "Players"
+local lighting = game:GetService "Lighting"
+local rfirst   = game:GetService "ReplicatedFirst"
+local rstorage = game:GetService "ReplicatedStorage"
+local sgui     = game:GetService "StarterGui"
+local spack    = game:GetService "StarterPack"
+local splayer  = game:GetService "StarterPlayer"
+local soundsv  = game:GetService "SoundService"
+local chatsv   = game:GetService "Chat"
+local locsv    = game:GetService "LocalizationService"
+local runsv    = game:GetService "RunService"
+local dstore   = game:GetService "DataStoreService"
+local collsv   = game:GetService "CollectionService"
+
+local Utils = require(script.Utils)
+
+--lookup tables
+local whitespace = {" "}
+local symbols = {"*", "=", "+", "-", "/", "%", ">", ",", "#", "."}
+
+--regexes
+local identifierRegex = "[a-zA-Z0-9_]+"
+
+--- Tokenises a query into its constituent tokens.
+local function tokenise(query)
+	
+	local function newToken(t, v, i)
+		return {type = t, value = v, index = i, query = query}
+	end
+	
+	local tokenRules = {
+		quotes = {
+			shouldProcess = function(char, index, previousToken)
+				return char == "'" or char == '"'
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				local contents = ""
+				local newIndex = index + 1
+				local closed = false
+				while newIndex <= #query do
+					local newChar = query:sub(newIndex, newIndex)
+					if newChar == char then
+						closed = true
+						break
+					else
+						contents = contents .. newChar
+					end
+					newIndex = newIndex + 1
+				end
+				if not closed then
+					error("Pick: quote in pattern not closed;\n\n" .. query .. "\n" .. (" "):rep(index - 1) .. "^ start of quote" .. "\n(index: " .. index .. "/" .. #query .. ")")
+				end
+				advance(#contents + 1)
+				table.insert(tokens, newToken("quote", contents, index))
+			end
+		},
+		whitespace = {
+			shouldProcess = function(char, index, previousToken)
+				return Utils.contains(whitespace, char)
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				table.insert(tokens, newToken("whitespace", nil, index))
+			end
+		},
+		parentheses = {
+			shouldProcess = function(char, index, previousToken)
+				return char == "(" or char == ")"
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				table.insert(tokens, newToken("parenthese", char == "(", index))
+			end
+		},
+		brackets = {
+			shouldProcess = function(char, index, previousToken)
+				return char == "[" or char == "]"
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				table.insert(tokens, newToken("bracket", char == "[", index))
+			end
+		},
+		braces = {
+			shouldProcess = function(char, index, previousToken)
+				return char == "{" or char == "}"
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				table.insert(tokens, newToken("brace", char == "{", index))
+			end
+		},
+		symbols = {
+			shouldProcess = function(char, index, previousToken)
+				return Utils.contains(symbols, char)
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				table.insert(tokens, newToken("symbol", char, index))
+			end
+		},
+		identifiers = {
+			shouldProcess = function(char, index, previousToken)
+				return char == "*" or char:match(identifierRegex)
+			end,
+			process = function(char, index, previousToken, tokens, advance)
+				if char == "*" or previousToken.value == "*" or previousToken.type ~= "identifier" then
+					table.insert(tokens, newToken("identifier", char, index))
+				else
+					previousToken.value = previousToken.value .. char
+				end
+			end
+		}
+	}
+	
+	local tokens = {}
+	local nullToken = newToken("null", nil, 0)
+	
+	local function getPreviousToken()
+		return tokens[#tokens] or nullToken
+	end
+	
+	local index = 1
+	while index <= #query do
+		local char = query:sub(index, index)
+		local previousToken = getPreviousToken()
+		local processed = false
+		for _, rule in pairs(tokenRules) do
+			if rule.shouldProcess(char, index, previousToken) then
+				processed = true
+				rule.process(char, index, previousToken, tokens, function(x) index = index + x end)
+				break
+			end
+		end
+		if not processed then
+			error("Pick: unrecognised token in pattern;\n\n" .. query .. "\n" .. (" "):rep(index - 1) .. "^ not recognised" .. "\n(index: " .. index .. "/" .. #query .. ")")
+		end
+		index = index + 1
+	end
+	
+	-- get rid of now-unnecessary tokens
+	while true do
+		local strippedToken = false
+		for index, token in pairs(tokens) do
+			if token.type == "null" or token.type == "whitespace" then
+				table.remove(tokens, index)
+				strippedToken = true
+			end
+		end
+		if not strippedToken then
+			break
+		end
+	end
+	
+	return tokens
+	
+end
+
+--- Splits a set of tokens into rules, based on commas.
+local function splitIntoRules(tokens, query)
+	local rules = {}
+	local currentRule = {}
+	local currentRuleEmpty = true
+	local lastIndex = 0
+	for _, token in ipairs(tokens) do
+		lastIndex = token.index
+		if token.type == "symbol" and token.value == "," then
+			if currentRuleEmpty then
+				error("Pick: empty rule in pattern;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ end of empty rule" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+			end
+			rules[#rules + 1] = currentRule
+			currentRule = {}
+			currentRuleEmpty = true
+		else
+			currentRule[#currentRule + 1] = token
+			if token.type ~= "whitespace" then
+				currentRuleEmpty = false
+			end
+		end
+	end
+	if currentRuleEmpty then
+		if #rules < 1 then
+			error("Pick: empty pattern")
+		else
+			error("Pick: empty rule at end of pattern;\n\n" .. query .. "\n" .. (" "):rep(lastIndex - 1) .. "^ end of pattern" .. "\n(index: " .. lastIndex .. "/" .. #query .. ")")
+		end
+	end
+	rules[#rules + 1] = currentRule
+	
+	return rules
+end
+
+--- Divides a rule into its parts, by hierachy (>)
+local function getRulePartsByHierachy(rule, query)
+	local ruleParts = {}
+	local currentRulePart = {}
+	local currentRulePartEmpty = true
+	local nullToken = {type = "null", value = nil, index = 0, query = query}
+	local lastIndex = 0
+	for i, token in ipairs(rule) do
+		lastIndex = token.index
+		local previousToken = rule[i-1] or nullToken
+		local nextToken = rule[i+1] or nullToken
+		if token.type == "symbol" and token.value == ">" then
+			if currentRulePartEmpty then
+				error("Pick: empty rule part in pattern;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ end of empty rule part" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+			end
+			table.insert(ruleParts, currentRulePart)
+			currentRulePart = {}
+			currentRulePartEmpty = true
+		else
+			table.insert(currentRulePart, token)
+			if token.type ~= "whitespace" then
+				currentRulePartEmpty = false
+			end
+		end
+	end
+	if currentRulePartEmpty then
+		if #ruleParts < 1 then
+			error("Pick: empty rule part in pattern;\n\n" .. query .. "\n" .. (" "):rep(lastIndex - 1) .. "^ end of empty rule part" .. "\n(index: " .. lastIndex .. "/" .. #query .. ")")
+		else
+			error("Pick: empty rule at end of pattern;\n\n" .. query .. "\n" .. (" "):rep(lastIndex - 1) .. "^ end of pattern" .. "\n(index: " .. lastIndex .. "/" .. #query .. ")")
+		end
+	end
+	ruleParts[#ruleParts + 1] = currentRulePart
+	
+	return ruleParts
+end
+
+--- Extracts the identifier, class and tag information from the given token parts.
+local function getSelectorFromParts(selectorPart, query)
+	
+	local identifier
+	local class
+	local tag
+	
+	local currentPrefix = nil
+	
+	for index, token in ipairs(selectorPart) do
+		if token.type == "symbol" and token.value == "." then
+			
+			if currentPrefix ~= nil then
+				error("Pick: duplicate prefix in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ duplicate prefix" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+			elseif class ~= nil then
+				error("Pick: duplicate class in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ duplicate class" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+			end
+			
+			currentPrefix = "class"
+			
+		elseif token.type == "symbol" and token.value == "#" then
+			
+			if currentPrefix ~= nil then
+				error("Pick: duplicate prefix in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ duplicate prefix" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+			elseif tag ~= nil then
+				error("Pick: duplicate tag in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ duplicate tag" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+			end
+			
+			currentPrefix = "tag"
+			
+		elseif token.type == "identifier" or token.type == "quote" or (token.type == "symbol" and token.value == "*") then
+			
+			if currentPrefix == "class" then
+				
+				class = token.value
+				currentPrefix = nil
+				
+			elseif currentPrefix == "tag" then
+				
+				if tag ~= nil then
+					error("Pick: duplicate tag in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ duplicate tag" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+				end
+				tag = token.value
+				currentPrefix = nil
+				
+			else
+				
+				if identifier ~= nil then
+					error("Pick: duplicate identifier in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ duplicate identifier" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+				end
+				identifier = token.value
+				currentPrefix = nil
+				
+			end
+			
+		else
+			error("Pick: invalid token in selector;\n\n" .. query .. "\n" .. (" "):rep(token.index - 1) .. "^ invalid token" .. "\n(index: " .. token.index .. "/" .. #query .. ")")
+		end
+	end
+	
+	if identifier == nil and class == nil and tag == nil then
+		error("Pick: empty selector in rule;\n\n" .. query .. "\n" .. (" "):rep(selectorPart[1].index - 1) .. "^ start of empty selector" .. "\n(index: " .. selectorPart[1].index .. "/" .. #query .. ")")
+	end
+	
+	return identifier, class, tag
+	
+end
+
+
+--- Tests to see if the instance matches the selector described by the token parts.
+local function matchesSelector(instance, selectorPart, query)
+	
+	local identifier, class, tag = getSelectorFromParts(selectorPart, query)
+	
+	if identifier ~= nil and identifier ~= "*" and instance.Name ~= identifier then return false
+	elseif class ~= nil and class ~= "*" and not instance:IsA(class) then return false
+	elseif tag ~= nil and tag ~= "*" and not collsv:HasTag(instance, tag) then return false
+	else return true
+	end
+	
+end
+
+--- Selects descendants of the given root instance using a tokenised rule.
+local function selectFromRules(root, rules, query, selectInstance)
+	local allInstances = root:GetDescendants()
+	for _, rule in pairs(rules) do
+		-- divide rule up by hierachy (>)
+		local ruleParts = getRulePartsByHierachy(rule, query)
+		
+		-- TODO: Iterate over descendants of root and look for matches of first rule part
+		-- Then, iterate over the matches' direct children and look for matches of second rule part
+		-- Then, iterate over the matches' matches' direct children and look for matches of third rule part
+		-- et cetera
+		-- When a rule part is surrounded in braces, remember all the matches for that rule part as the final list
+		-- If, after that, the further rule parts invalidate that match, remove it from the final list
+		-- At the end, if no rule parts had braces, default the final list to the matches for the final rule part
+		-- For each thing in the final list, selectInstance() it
+		local currentSelection = {}
+		local capturedSelection
+		local hasCapture = false
+		do -- first rule part
+			
+			--the current rule part
+			local rulePart = ruleParts[1]
+			--the selector part of the rule part (Name.Class#Tag)
+			local selectorPart = rulePart
+			local captureThis = false
+			
+			if rulePart[1].type == "brace" and rulePart[1].value and rulePart[#rulePart].type == "brace" and not rulePart[#rulePart].value then
+				selectorPart = {}
+				for i=2, #rulePart - 1 do
+					selectorPart[i-1] = rulePart[i]
+				end
+				if #selectorPart < 1 then
+					error("Pick: empty selector in rule;\n\n" .. query .. "\n" .. (" "):rep(rulePart[1].index - 1) .. "^ start of empty selector" .. "\n(index: " .. rulePart[1].index .. "/" .. #query .. ")")
+				end
+				captureThis = true
+				hasCapture = true
+			end
+			
+			for _, instance in pairs(allInstances) do
+				if Utils.isUnlockedInstance(instance) and matchesSelector(instance, selectorPart, query) then
+					table.insert(currentSelection, instance)
+				end
+			end
+			
+			if captureThis then
+				capturedSelection = Utils.clone(currentSelection)
+			end
+		end
+		
+		for i=2, #ruleParts do
+			
+			--the current rule part
+			local rulePart = ruleParts[i]
+			--the selector part of the rule part (Name.Class#Tag)
+			local selectorPart = rulePart
+			local captureThis = false
+			
+			if rulePart[1].type == "brace" and rulePart[1].value and rulePart[#rulePart].type == "brace" and not rulePart[#rulePart].value then
+				
+				if hasCapture then
+					error("Pick: duplicate capture in pattern;\n\n" .. query .. "\n" .. (" "):rep(rulePart[1].index - 1) .. "^ start of duplicate capture" .. "\n(index: " .. rulePart[1].index .. "/" .. #query .. ")")
+				end
+				
+				selectorPart = {}
+				for i=2, #rulePart - 1 do
+					selectorPart[i-1] = rulePart[i]
+				end
+				if #selectorPart < 1 then
+					error("Pick: empty selector in rule;\n\n" .. query .. "\n" .. (" "):rep(rulePart[1].index - 1) .. "^ start of empty selector" .. "\n(index: " .. rulePart[1].index .. "/" .. #query .. ")")
+				end
+				captureThis = true
+				hasCapture = true
+			end
+			
+			local newSelection = {}
+			for _, instance in pairs(currentSelection) do
+				for _, child in pairs(instance:GetChildren()) do
+					if matchesSelector(child, selectorPart, query) then
+						table.insert(newSelection, child)
+					end
+				end
+			end
+			currentSelection = newSelection
+			
+			if captureThis then
+				capturedSelection = Utils.clone(currentSelection)
+			elseif hasCapture then
+				--filter out invalidated captures
+				local newCapturedSelection = {}
+				--stop duplicate additions
+				local capturedSelectionSet = {}
+				
+				-- add things to the set if they're valid
+				for _, instance in pairs(currentSelection) do
+					for _, capture in pairs(capturedSelection) do
+						if not capturedSelectionSet[capture] and capture:IsAncestorOf(instance) then
+							table.insert(newCapturedSelection, capture)
+							capturedSelectionSet[capture] = true
+						end
+					end
+				end
+				
+				-- write new selection
+				capturedSelection = newCapturedSelection
+			end
+			
+		end
+		
+		for _, instance in pairs(capturedSelection or currentSelection) do
+			selectInstance(instance)
+		end
+		
+	end
+end
+
+--- Selects descendants of the given root instance using a query pattern.
+local function pick(root, query)
+	
+	-- tokenise query
+	local tokens = tokenise(query)
+	
+	-- split into rules
+	local rules = splitIntoRules(tokens, query)
+	
+	-- list of selected instances
+	local selection = {}
+	-- stops selection multiple times
+	local selectedSet = {}
+	
+	local function selectInstance(i)
+		if not selectedSet[i] then
+			selectedSet[i] = true
+			selection[#selection + 1] = i
+		end
+	end
+	
+	-- select instances
+	selectFromRules(root, rules, query, selectInstance)
+	
+	local object = setmetatable({}, {__tostring = function() return "pick_object(" .. query .. ")" end})
+	
+	-- get all selected instances unpacked
+	object.get = function()
+		return unpack(selection)
+	end
+	
+	-- get number of selected instances
+	object.len = function()
+		return #selection
+	end
+	
+	-- get all selected instances as a table
+	object.array = function()
+		return selection
+	end
+	
+	-- creates an iterator over the selected instances
+	object.each = function()
+		local currentIndex = 0
+		return function()
+			currentIndex = currentIndex + 1
+			return selection[currentIndex]
+		end
+	end
+	
+	return object
+end
+
+return function(a, b)
+	
+	if b ~= nil then 
+		if typeof(a) ~= "Instance" then error("Pick: root instance must be Instance") end
+		if typeof(b) ~= "string" then error("Pick: pattern must be string") end
+		return pick(a, b) 
+	elseif typeof(a) == "string" then 
+		return pick(game, a)
+	else
+		error("Pick: pattern must be string")
+	end
+	
+end
+]]></ProtectedString>
+				<int64 name="SourceAssetId">-1</int64>
+				<BinaryString name="Tags"></BinaryString>
+			</Properties>
+			<Item class="ModuleScript" referent="RBXF86A3E2F4F694CBA8ADD0F760A507504">
+				<Properties>
+					<BinaryString name="AttributesSerialize"></BinaryString>
+					<SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+					<bool name="DefinesCapabilities">false</bool>
+					<Content name="LinkedSource"><null></null></Content>
+					<string name="Name">Utils</string>
+					<string name="ScriptGuid">{F4B0B352-A60B-4633-BA26-2C741F349216}</string>
+					<ProtectedString name="Source"><![CDATA[--- Elttob Utils
+-- A series of helpers which simplify and extend operations on objects.
+
+local players  = game:GetService "Players"
+local lighting = game:GetService "Lighting"
+local rfirst   = game:GetService "ReplicatedFirst"
+local rstorage = game:GetService "ReplicatedStorage"
+local sgui     = game:GetService "StarterGui"
+local spack    = game:GetService "StarterPack"
+local splayer  = game:GetService "StarterPlayer"
+local soundsv  = game:GetService "SoundService"
+local chatsv   = game:GetService "Chat"
+local locsv    = game:GetService "LocalizationService"
+local runsv    = game:GetService "RunService"
+local dstore   = game:GetService "DataStoreService"
+local collsv   = game:GetService "CollectionService"
+
+local Utils = {}
+
+--- Measures the length of its argument, of any type.
+-- Given a string, returns #string.
+-- Given a table, returns the number of key-value pairs it contains.
+-- Given anything else, returns #tostring(argument).
+function Utils.len(any)
+	local t = typeof(any)
+	if t == "string" then 
+		return #any
+	elseif t == "table" then
+		local total = 0
+		for i, v in pairs(any) do
+			total = total + 1
+		end
+		return total
+	else
+		return #tostring(any)
+	end
+end
+	
+--- Returns the location of its second argument in its first argument, or nil if it doesn't exist.
+-- Given a table as argument 1, performs a search on all values in the table and returns the key.
+-- Given a string as argument 1, looks for a substring in argument 2 of tostring(argument 1) and returns the start index.
+function Utils.indexOf(x, y)
+	if typeof(x) == "table" then
+		for i, v in pairs(x) do
+			if v == y then return i end
+		end
+	elseif typeof(x) == "string" then
+		local substring = tostring(y)
+		for i=1, #x - #substring do
+			if x:sub(i, i + #substring - 1) == substring then return i end
+		end
+	end
+end
+	
+--- Tests if its second argument is contained in its first argument, according to indexOf().
+function Utils.contains(x, y)
+	return Utils.indexOf(x, y) ~= nil
+end
+
+--- Tests to see if its two arguments are equal.
+-- Given two arguments of different types, returns false.
+-- Given two tables, returns true if they contain the same key-value pairs (i.e. equal according to this function).
+-- Given two non-tables, returns x == y.
+function Utils.equals(x, y)
+	if typeof(x) ~= typeof(y) then return false end
+	
+	if typeof(x) == "table" then
+		for i, v in pairs(x) do
+			if not Utils.equals(y[i], v) then return false end
+		end
+		for i, v in pairs(y) do
+			if not Utils.equals(x[i], v) then return false end
+		end
+		return true
+	else
+		return x == y
+	end
+end
+
+--- Deep clones its argument, of any type.
+-- Given a table, returns a deep clone of the table.
+-- Given a non-table, returns the argument, unmodified.
+function Utils.clone(any)
+	if typeof(any) == "table" then
+		
+		local new = {}
+		for i, v in pairs(any) do
+			new[i] = Utils.clone(v)
+		end
+		return new
+		
+	else 
+		return any
+	end
+end
+
+--- Tests to see whether an Instance can be manipulated by scripts.
+function Utils.isUnlockedInstance(i)
+	local success, err = pcall(function() i.Name = i.Name end)
+	return success
+end
+
+return Utils
+]]></ProtectedString>
+					<int64 name="SourceAssetId">-1</int64>
+					<BinaryString name="Tags"></BinaryString>
+				</Properties>
+			</Item>
+		</Item>
+	</Item>
+</roblox>
